@@ -48,6 +48,16 @@ int main()
 	// Assign functions to be called when button events occur
 	rc_button_set_callbacks(RC_BTN_PIN_PAUSE,on_pause_press,on_pause_release);
 
+	//initialize the GPIO pins
+	if(rc_gpio_init(3,20,GPIOHANDLE_REQUEST_OUTPUT)){
+		fprintf(stderr, "ERROR: failed to initialize GPIO 3.20\n");
+		return -1;
+	}
+	if(rc_gpio_init(3,17,GPIOHANDLE_REQUEST_OUTPUT)){
+		fprintf(stderr, "ERROR: failed to initialize GPIO 3.17\n");
+		return -1;
+	}
+	
 	// make PID file to indicate your project is running
 	// due to the check made on the call to rc_kill_existing_process() above
 	// we can be fairly confident there is no PID file already and we can
@@ -63,21 +73,22 @@ int main()
 	while(rc_get_state()!=EXITING){
 		// do things based on the state
 		if(rc_get_state()==RUNNING){
-			rc_led_set(RC_LED_GREEN, 1);
-			rc_led_set(RC_LED_RED, 0);
+			rc_gpio_set_value(3,20,1);
+			rc_gpio_set_value(3,17,1);
 		}
 		else{
-			rc_led_set(RC_LED_GREEN, 0);
-			rc_led_set(RC_LED_RED, 1);
+			rc_gpio_set_value(3,20,0);
+			rc_gpio_set_value(3,17,0);
 		}
 		// always sleep at some point
 		rc_usleep(100000);
 	}
 
 	// turn off LEDs and close file descriptors
-	rc_led_set(RC_LED_GREEN, 0);
-	rc_led_set(RC_LED_RED, 0);
-	rc_led_cleanup();
+	rc_gpio_set_value(3,20,1);
+	rc_gpio_set_value(3,17,1);
+	rc_gpio_cleanup(3,20);
+	rc_gpio_cleanup(3,17);
 	rc_button_cleanup();	// stop button handlers
 	rc_remove_pid_file();	// remove pid file LAST
 	return 0;
