@@ -28,10 +28,10 @@
 #define MDIR2B_CHIP_BLUE	0	//gpio0.10	P8_31
 #define MDIR2B_PIN_BLUE		10	//gpio0.10	P8_31
 
-#define MDIR3B_CHIP		2	//gpio2.8	P8.43
-#define MDIR3B_PIN		8	//gpio2.8	P8.43
-#define MDIR3A_CHIP		2	//gpio2.9	P8.44
-#define MDIR3A_PIN		9	//gpio2.9	P8.44
+#define MDIR3B_CHIP		3	//gpio3.20	P8.43     <----HIJACKED   (direction)
+#define MDIR3B_PIN		20	//gpio3.20	P8.43     <----HIJACKED
+#define MDIR3A_CHIP		3	//gpio3.17	P8.44     <----HIJACKED   (pwm)
+#define MDIR3A_PIN		17	//gpio3.17	P8.44     <----HIJACKED
 
 #define MDIR4A_CHIP		2	//gpio2.6	P8.45
 #define MDIR4A_PIN		6	//gpio2.6	P8.45
@@ -40,7 +40,7 @@
 
 #define MOT_STBY		0,20	//gpio0.20	P9.41
 
-#define CHANNELS		4
+#define CHANNELS		4 
 
 
 // polarity of the motor connections
@@ -64,7 +64,7 @@ int rc_motor_init(void)
 }
 
 
-int rc_motor_init_freq(int pwm_frequency_hz)
+int rc_motor_init_freq(int pwm_frequency_hz) //I guess we could really pass in any value we want as a parameter for this test
 {
 	int i;
 
@@ -113,7 +113,7 @@ int rc_motor_init_freq(int pwm_frequency_hz)
 	pwmss[3]=2;
 	pwmch[3]='B';
 
-	// set up pwm channels
+	/*// set up pwm channels
 	if(unlikely(rc_pwm_init(1,pwm_frequency_hz))){
 		fprintf(stderr,"ERROR in rc_motor_init, failed to initialize pwm subsystem 1\n");
 		return -1;
@@ -121,7 +121,7 @@ int rc_motor_init_freq(int pwm_frequency_hz)
 	if(unlikely(rc_pwm_init(2,pwm_frequency_hz))){
 		fprintf(stderr,"ERROR in rc_motor_init, failed to initialize pwm subsystem 2\n");
 		return -1;
-	}
+	}*/
 
 	// set up gpio pins
 	if(unlikely(rc_gpio_init(MOT_STBY, GPIOHANDLE_REQUEST_OUTPUT))){
@@ -149,8 +149,8 @@ int rc_motor_init_freq(int pwm_frequency_hz)
 	}
 
 	// make sure standby is off since most users won't use it
-	if(unlikely(rc_gpio_set_value(MOT_STBY,1))){
-		fprintf(stderr,"ERROR in rc_motor_init, can't write to gpio %d,%d\n",MOT_STBY);
+	if(unlikely(rc_gpio_set_value(0,20,1))){
+		fprintf(stderr,"ERROR in rc_motor_init, can't write to gpio %d,%d\n",3,20);
 		return -1;
 	}
 	stby_state = 0;
@@ -165,8 +165,8 @@ int rc_motor_cleanup(void)
 	int i;
 	if(!init_flag) return 0;
 	rc_motor_free_spin(0);
-	rc_pwm_cleanup(1);
-	rc_pwm_cleanup(2);
+	/*rc_pwm_cleanup(1);
+	rc_pwm_cleanup(2);*/
 	rc_gpio_cleanup(MOT_STBY);
 	for(i=0;i<CHANNELS;i++){
 		rc_gpio_cleanup(dirA_chip[i],dirA_pin[i]);
@@ -203,7 +203,7 @@ int rc_motor_standby(int standby_en)
 }
 
 
-int rc_motor_set(int motor, double duty)
+int rc_motor_set(int motor, double duty)//   TO TEST THIS THANG WE WANT TO PASS IN 0 AS MOTOR
 {
 	int a,b,i;
 
@@ -242,10 +242,10 @@ int rc_motor_set(int motor, double duty)
 		fprintf(stderr,"ERROR in rc_motor_set, failed to write to gpio pin %d,%d\n",dirB_chip[motor-1],dirB_pin[motor-1]);
 		return -1;
 	}
-	if(unlikely(rc_pwm_set_duty(pwmss[motor-1], pwmch[motor-1], duty))){
+	/*if(unlikely(rc_pwm_set_duty(pwmss[motor-1], pwmch[motor-1], duty))){
 		fprintf(stderr,"ERROR in rc_motor_set, failed to write to pwm %d%c\n",pwmss[motor-1], pwmch[motor-1]);
 		return -1;
-	}
+	}*/
 	return 0;
 }
 
@@ -281,10 +281,10 @@ int rc_motor_free_spin(int motor)
 		fprintf(stderr,"ERROR in rc_motor_free_spin, failed to write to gpio pin %d,%d\n",dirB_chip[motor-1],dirB_pin[motor-1]);
 		return -1;
 	}
-	if(unlikely(rc_pwm_set_duty(pwmss[motor-1], pwmch[motor-1], 0.0))){
+	/*if(unlikely(rc_pwm_set_duty(pwmss[motor-1], pwmch[motor-1], 0.0))){
 		fprintf(stderr,"ERROR in rc_motor_free_spin, failed to write to pwm %d%c\n",pwmss[motor-1], pwmch[motor-1]);
 		return -1;
-	}
+	}*/
 	return 0;
 }
 
@@ -320,9 +320,9 @@ int rc_motor_brake(int motor, double direction)
 		fprintf(stderr,"ERROR in rc_motor_brake, failed to write to gpio pin %d,%d\n",dirB_chip[motor-1],dirB_pin[motor-1]);
 		return -1;
 	}
-	if(unlikely(rc_pwm_set_duty(pwmss[motor-1], pwmch[motor-1], 0.0))){
+	/*if(unlikely(rc_pwm_set_duty(pwmss[motor-1], pwmch[motor-1], 0.0))){
 		fprintf(stderr,"ERROR in rc_motor_brake, failed to write to pwm %d%c\n",pwmss[motor-1], pwmch[motor-1]);
 		return -1;
-	}
+	}*/
 	return 0;
 }
